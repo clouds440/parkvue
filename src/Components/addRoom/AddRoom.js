@@ -20,6 +20,7 @@ import {
   FormControlLabel,
   FormGroup,
   IconButton,
+  Tooltip,
   Alert,
   Card,
   CardMedia,
@@ -36,6 +37,7 @@ import {
   Security,
   MonetizationOn,
   AutoAwesome,
+  InfoOutlined,
 } from "@mui/icons-material";
 import { useDropzone } from "react-dropzone";
 import ReactMapGL, {
@@ -99,6 +101,7 @@ const AddRoom = () => {
     description: "",
     price: "",
     capacity: "1",
+    isCommercial: false,
     vehicleTypes: [],
     amenities: [],
     size: "Standard",
@@ -585,6 +588,7 @@ CONSTRAINTS:
         id: uniqueRoomId,
         capacity: sanitizedCapacity,
         maxCapacity: sanitizedCapacity,
+        isCommercial: Boolean(formData.isCommercial),
         lng: location.lng,
         lat: location.lat,
         address: sanitizedAddress,
@@ -623,6 +627,7 @@ CONSTRAINTS:
           state: sanitizedState,
           zipCode: sanitizedZipCode,
           capacity: String(sanitizedCapacity),
+          isCommercial: Boolean(formData.isCommercial),
           vehicleTypes: formData.vehicleTypes,
           amenities: formData.amenities,
           size: formData.size,
@@ -656,6 +661,7 @@ CONSTRAINTS:
         description: "",
         price: "",
         capacity: "1",
+        isCommercial: false,
         vehicleTypes: [],
         amenities: [],
         size: "Standard",
@@ -960,6 +966,33 @@ CONSTRAINTS:
                       }}
                       helperText="When will the availability end?"
                     />
+                  </Grid>
+
+                  <Grid item xs={12}>
+                    <Box sx={{ mt: { xs: 0.5, sm: 0 } }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        <FormControlLabel
+                          control={
+                            <Checkbox
+                              checked={Boolean(formData.isCommercial)}
+                              onChange={(e) => handleChange("isCommercial", e.target.checked)}
+                            />
+                          }
+                          label="Commercial listing"
+                        />
+                        <Tooltip
+                          arrow
+                          title="Check this for businesses or parking lots that represent a commercial operator."
+                        >
+                          <IconButton size="small" sx={{ mt: -0.25 }}>
+                            <InfoOutlined fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      </Box>
+                      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: -0.25 }}>
+                        Helps renters distinguish commercial listings from individual spots.
+                      </Typography>
+                    </Box>
                   </Grid>
                   </Grid>
                 </Box>

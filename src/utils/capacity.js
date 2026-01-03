@@ -48,3 +48,14 @@ export const getRoomMaxCapacity = (room) => {
 };
 
 export const isRoomAvailable = (room) => getRoomCapacity(room) > 0;
+
+// Listing type helper:
+// - Primary signal: explicit boolean `isCommercial` saved on the room document.
+// - Fallback (older docs): infer commercial if capacity/maxCapacity indicates multiple spaces.
+export const isCommercialListing = (room) => {
+  if (!room) return false;
+  if (room.isCommercial === true) return true;
+  if (room.isCommercial === false) return false;
+
+  return getRoomMaxCapacity(room) > 1 || getRoomCapacity(room) > 1;
+};
