@@ -46,6 +46,7 @@ import {
   Speed as SpeedIcon,
   Security as SecurityIcon,
   LocalParking as ParkingIcon,
+  Garage as GarageIcon,
   DirectionsCar as CarIcon,
   Home as HomeIcon,
   CheckCircle,
@@ -60,7 +61,7 @@ import {
   PlayCircle,
 } from "@mui/icons-material";
 import { Context } from "../../context/ContextProvider";
-import { getRoomCapacity, isRoomAvailable } from "../../utils/capacity";
+import { getRoomCapacity, isCommercialListing, isRoomAvailable } from "../../utils/capacity";
 
 const Rooms = () => {
   const theme = useTheme();
@@ -698,6 +699,7 @@ const Rooms = () => {
               {displayed.map((room, index) => {
                 const capacity = getRoomCapacity(room);
                 const isAvailable = capacity > 0;
+                const isCommercial = isCommercialListing(room);
                 const imgSrc = (room.images && room.images.length ? room.images[0] : "") || "/placeholder-park.jpg";
                 const isImgLoaded = loadedMediaSrcRef.current.has(imgSrc);
                 return (
@@ -770,6 +772,31 @@ const Rooms = () => {
                           }}
                         >
                           Spaces: {capacity}
+                        </Box>
+
+                        {/* Listing Type Badge */}
+                        <Box
+                          sx={{
+                            position: "absolute",
+                            top: 92,
+                            left: 16,
+                            zIndex: 2,
+                            px: 1.25,
+                            py: 0.5,
+                            borderRadius: 100,
+                            bgcolor: alpha(theme.palette.secondary.main, 0.9),
+                            color: theme.palette.secondary.contrastText,
+                            fontSize: '0.75rem',
+                            fontWeight: 800,
+                            boxShadow: '0 4px 10px rgba(0,0,0,0.08)',
+                            backdropFilter: 'blur(4px)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 0.6,
+                          }}
+                        >
+                          {isCommercial ? <GarageIcon sx={{ fontSize: 16 }} /> : <ParkingIcon sx={{ fontSize: 16 }} />}
+                          {isCommercial ? 'COMMERCIAL' : 'SINGLE'}
                         </Box>
 
                         {/* Price Tag */}
@@ -1302,12 +1329,20 @@ const Rooms = () => {
                         <Typography variant="h4" sx={{ fontWeight: 800, color: theme.palette.primary.main }}>
                           ${Number(selectedRoom.price || 0).toFixed(2)}
                         </Typography>
-                        <Chip
-                          label={isRoomAvailable(selectedRoom) ? `Available (${getRoomCapacity(selectedRoom)})` : "Reserved"}
-                          color={isRoomAvailable(selectedRoom) ? "success" : "error"}
-                          icon={isRoomAvailable(selectedRoom) ? <CheckCircle /> : <Warning />}
-                          sx={{ fontWeight: 600 }}
-                        />
+                        <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" justifyContent="flex-end">
+                          <Chip
+                            label={isRoomAvailable(selectedRoom) ? `Available (${getRoomCapacity(selectedRoom)})` : "Reserved"}
+                            color={isRoomAvailable(selectedRoom) ? "success" : "error"}
+                            icon={isRoomAvailable(selectedRoom) ? <CheckCircle /> : <Warning />}
+                            sx={{ fontWeight: 600 }}
+                          />
+                          <Chip
+                            label={isCommercialListing(selectedRoom) ? "Commercial" : "Single"}
+                            color="secondary"
+                            icon={isCommercialListing(selectedRoom) ? <GarageIcon /> : <ParkingIcon />}
+                            sx={{ fontWeight: 700 }}
+                          />
+                        </Stack>
                       </Stack>
                       <Typography variant="body1" color="text.secondary" sx={{ mt: 1 }}>
                         {selectedRoom.description}

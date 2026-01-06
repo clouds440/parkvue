@@ -29,13 +29,14 @@ import ReactMapGL, {
 import { useNavigate, useLocation } from "react-router-dom";
 import { useValue } from "../../context/ContextProvider";
 import { db, collection, getDocs } from "../../firebase/config";
-import { getRoomCapacity, isRoomAvailable } from "../../utils/capacity";
+import { getRoomCapacity, isCommercialListing, isRoomAvailable } from "../../utils/capacity";
 import "mapbox-gl/dist/mapbox-gl.css";
 import Geocoder from "./Geocoder";
 import {
   LocationOn as LocationIcon,
   LocalParking as ParkingIcon,
 } from "@mui/icons-material";
+import GarageIcon from "@mui/icons-material/Garage";
 
 const DEFAULT_LOCATION = { lng: -74.006, lat: 40.7128 };
 
@@ -176,6 +177,8 @@ const ClusterMap = () => {
   // Custom marker component
   const CustomMarker = ({ room, onClick }) => {
     const isAvailable = isRoomAvailable(room);
+    const isCommercialAd = isCommercialListing(room);
+    const availableSpaces = getRoomCapacity(room);
 
     return (
       <Marker
@@ -216,17 +219,51 @@ const ClusterMap = () => {
               width: 36,
               height: 36,
               boxShadow: theme.shadows[4],
-              border: `2px solid white`,
+              border: isCommercialAd
+                ? `3px solid ${theme.palette.secondary.main}`
+                : `2px solid white`,
               transform: hoveredRoom === room.id ? "scale(1.1)" : "scale(1)",
               transition: "transform 0.2s ease",
             }}
           >
-            <ParkingIcon />
+            {isCommercialAd ? <GarageIcon /> : <ParkingIcon />}
           </Avatar>
+
+          {/* Capacity badge (commercial = capacity > 1) */}
+          {isCommercialAd && (
+            <Box
+              sx={{
+                position: "absolute",
+                top: -6,
+                right: -6,
+                px: 0.6,
+                py: 0.15,
+                borderRadius: 1,
+                bgcolor: theme.palette.secondary.main,
+                color: theme.palette.secondary.contrastText,
+                fontSize: "0.65rem",
+                fontWeight: 800,
+                letterSpacing: 0.3,
+                boxShadow: theme.shadows[2],
+                border: `1px solid ${alpha(theme.palette.common.white, 0.7)}`,
+                pointerEvents: "none",
+              }}
+            >
+              {availableSpaces}
+            </Box>
+          )}
         </Box>
       </Marker>
     );
   };
+
+  const singleListings = rooms.filter((r) => !isCommercialListing(r));
+  const commercialListings = rooms.filter((r) => isCommercialListing(r));
+
+  const singleAvailableCount = singleListings.filter((r) => isRoomAvailable(r)).length;
+  const singleReservedCount = singleListings.length - singleAvailableCount;
+  const commercialAvailableCount = commercialListings.filter((r) => isRoomAvailable(r)).length;
+  const commercialReservedCount = commercialListings.length - commercialAvailableCount;
 
   return (
     <Box
@@ -555,7 +592,7 @@ const ClusterMap = () => {
             p: { xs: 1.5, sm: 2 },
             boxShadow: theme.shadows[4],
             zIndex: 1,
-            maxWidth: { xs: 150, sm: 250 },
+            maxWidth: { xs: 330, sm: 250 },
           }}
         >
           <Stack spacing={1}>
@@ -569,57 +606,97 @@ const ClusterMap = () => {
             >
               Parking Spaces
             </Typography>
-            <Stack spacing={0.5}>
-              <Stack direction="row" alignItems="center" spacing={1}>
-                <Box
-                  sx={{
-                    width: { xs: 10, sm: 12 },
-                    height: { xs: 10, sm: 12 },
-                    borderRadius: "50%",
-                    bgcolor: theme.palette.primary.main,
-                  }}
-                />
-                <Typography 
-                  variant="body2" 
-                  color="text.secondary"
-                  sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
-                >
-                  {rooms.filter((r) => isRoomAvailable(r)).length} Available
-                </Typography>
+
+            <Stack
+              direction={{ xs: "row", sm: "column" }}
+              spacing={{ xs: 2, sm: 1 }}
+              justifyContent={{ xs: "space-between", sm: "flex-start" }}
+              alignItems={{ xs: "flex-start", sm: "stretch" }}
+            >
+              {/* Single spots */}
+              <Stack spacing={0.35} sx={{ flex: 1, minWidth: 0 }}>
+                <Stack direction="row" alignItems="center" spacing={0.8}>
+                  <ParkingIcon sx={{ fontSize: 16, color: theme.palette.text.primary }} />
+                  <Typography variant="caption" sx={{ fontWeight: 700, color: theme.palette.text.primary }}>
+                    Single spots
+                  </Typography>
+                </Stack>
+
+                <Stack direction="row" alignItems="center" spacing={1}>
+                  <ParkingIcon sx={{ fontSize: 16, color: theme.palette.primary.main }} />
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+                  >
+                    {singleAvailableCount} Available
+                  </Typography>
+                </Stack>
+
+                <Stack direction="row" alignItems="center" spacing={1}>
+                  <ParkingIcon sx={{ fontSize: 16, color: theme.palette.error.main }} />
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+                  >
+                    {singleReservedCount} Reserved
+                  </Typography>
+                </Stack>
+
+                <Stack direction="row" alignItems="center" spacing={1}>
+                  <ParkingIcon sx={{ fontSize: 16, color: theme.palette.text.secondary }} />
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+                  >
+                    {singleListings.length} Total
+                  </Typography>
+                </Stack>
               </Stack>
-              <Stack direction="row" alignItems="center" spacing={1}>
-                <Box
-                  sx={{
-                    width: { xs: 10, sm: 12 },
-                    height: { xs: 10, sm: 12 },
-                    borderRadius: "50%",
-                    bgcolor: theme.palette.error.main,
-                  }}
-                />
-                <Typography 
-                  variant="body2" 
-                  color="text.secondary"
-                  sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
-                >
-                  {rooms.filter((r) => !isRoomAvailable(r)).length} Reserved
-                </Typography>
-              </Stack>
-              <Stack direction="row" alignItems="center" spacing={1}>
-                <Box
-                  sx={{
-                    width: { xs: 10, sm: 12 },
-                    height: { xs: 10, sm: 12 },
-                    borderRadius: "50%",
-                    bgcolor: theme.palette.text.secondary,
-                  }}
-                />
-                <Typography 
-                  variant="body2" 
-                  color="text.secondary"
-                  sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
-                >
-                  {rooms.length} Total
-                </Typography>
+
+              {/* Commercial */}
+              <Stack spacing={0.35} sx={{ flex: 1, minWidth: 0 }}>
+                <Stack direction="row" alignItems="center" spacing={0.8}>
+                  <GarageIcon sx={{ fontSize: 16, color: theme.palette.text.primary }} />
+                  <Typography variant="caption" sx={{ fontWeight: 700, color: theme.palette.text.primary }}>
+                    Commercial
+                  </Typography>
+                </Stack>
+
+                <Stack direction="row" alignItems="center" spacing={1}>
+                  <GarageIcon sx={{ fontSize: 16, color: theme.palette.primary.main }} />
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+                  >
+                    {commercialAvailableCount} Available
+                  </Typography>
+                </Stack>
+
+                <Stack direction="row" alignItems="center" spacing={1}>
+                  <GarageIcon sx={{ fontSize: 16, color: theme.palette.error.main }} />
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+                  >
+                    {commercialReservedCount} Reserved
+                  </Typography>
+                </Stack>
+
+                <Stack direction="row" alignItems="center" spacing={1}>
+                  <GarageIcon sx={{ fontSize: 16, color: theme.palette.text.secondary }} />
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+                  >
+                    {commercialListings.length} Total
+                  </Typography>
+                </Stack>
               </Stack>
             </Stack>
           </Stack>

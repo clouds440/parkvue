@@ -51,6 +51,8 @@ import {
   AccessTime,
   Security,
   DirectionsCar,
+  LocalParking as ParkingIcon,
+  Garage as GarageIcon,
   SquareFoot,
   AttachMoney,
   CalendarToday,
@@ -62,7 +64,7 @@ import {
 } from "@mui/icons-material";
 import NotFound from "../../NotFound/NotFound";
 import { sanitizeText, sanitizeCardNumber, sanitizeCVV } from "../../utils/sanitize";
-import { getRoomCapacity, isRoomAvailable } from "../../utils/capacity";
+import { getRoomCapacity, isCommercialListing, isRoomAvailable } from "../../utils/capacity";
 
 // ---------- helper utilities ----------
 const luhnCheck = (num) => {
@@ -938,6 +940,12 @@ if (!loading && !room) {
                         label={availableNow ? "Available" : "Reserved"}
                         color={availableNow ? "success" : "error"}
                         sx={{ fontWeight: 600 }}
+                      />
+                      <Chip
+                        icon={isCommercialListing(room) ? <GarageIcon fontSize="small" /> : <ParkingIcon fontSize="small" />}
+                        label={isCommercialListing(room) ? "Commercial" : "Single"}
+                        color="secondary"
+                        sx={{ fontWeight: 700 }}
                       />
                       <Chip
                         icon={<DirectionsCar fontSize="small" />}
