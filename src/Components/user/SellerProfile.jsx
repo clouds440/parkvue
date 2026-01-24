@@ -15,7 +15,6 @@ import {
   Stack,
   Divider,
   useTheme,
-  useMediaQuery,
   alpha,
   Skeleton,
   Button,
@@ -44,7 +43,6 @@ const SellerProfile = () => {
   const { sellerId } = useParams();
   const navigate = useNavigate();
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const { dispatch } = useValue();
 
   const chipSx = {
